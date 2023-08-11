@@ -2,9 +2,15 @@ let n = 20;
 let globalTime = 0.0;
 let drawPath = true;
 
-let screenWidthX = 700;
-let screenHeightY = 700;
-let midScreen = screenWidthX / 2;
+// Get width and height from html
+let screenWidthX = window.innerWidth/2;
+let screenHeightY = window.innerHeight/2;
+let midScreenX = screenWidthX / 2;
+let midScreenY = screenHeightY / 2;
+let midScreen = { X: midScreenX, Y: midScreenY };
+// List of values 
+let drawColor = [255, 255, 255, 255];
+
 
 // Create global empty array for path
 let path = [];
@@ -19,6 +25,9 @@ let c = [[]];
 let circles = []; // using circ class 
 
 let temp = [];
+
+/// Create path image 
+let img;
 
 class circ {
     constructor(x, y, real, imaginary, v) {
@@ -36,7 +45,6 @@ class circ {
         let xOff = this.radius * Math.cos(theta);
         let yOff = this.radius * Math.sin(theta);
         strokeWeight(2);
-        tint(255, 255, 255, 100);
         line(this.x, this.y, this.x + xOff, this.y - yOff);
 
         let arrowSize = this.radius / 20 + 1;
@@ -80,24 +88,15 @@ class circ {
 }
 
 function calculateConstant(index) {
-    // console.log("Calculating constant for index " + index + "."); 
     let dt = (2 * PI) / (path.length-1);
     let index2 = index - (n / 2);
     let realSum = 0.0;
     let imaginarySum = 0.0;
-    // Log path for debuggin's sake
-    // if (index == n - 1) {
-    //     console.log("DEBUGGING DATA\n" + "dt = " + dt + "\nindex2 = " + index2 + "\npath.length = " + path.length + "\n"); 
-    // }
 
     for (let i = 1; i < path.length; i++) {
         let realF = path[i][0];
         let imaginaryF = path[i][1];
         let t = dt * i;
-        // if (index == n - 1) {
-        //     console.log("realF = " + realF + "\nimaginaryF = " + imaginaryF + "\nt = " + t + "\n");
-        //     console.log("realSum = " + realSum + "\nimaginarySum = " + imaginarySum + "\n")
-        // }
 
         realSum += realF * cos(index2 * t) + imaginaryF * sin(index2 * t);
         imaginarySum += imaginaryF * cos(index2 * t) - realF * sin(index2 * t);
@@ -130,7 +129,6 @@ function regularInterval() {
     } else {
         temp = path;
     }
-    console.log("temp.length = " + temp.length);
 
     // Now make the distance between each point a certain step size
     let stepSize = 1 * (n**(1/3))/20;
@@ -144,13 +142,13 @@ function regularInterval() {
         } 
     }
     temp2.push([temp[temp.length - 1][0], temp[temp.length - 1][1]]);
-    console.log("temp2.length = " + temp2.length);
     path = temp2;
 }
 
 function setup() {
     createCanvas(screenWidthX, screenHeightY);
     if (!drawPath) {
+        console.log("Drawing path");
         stroke(255);
 
         regularInterval();
@@ -163,17 +161,26 @@ function setup() {
         for (let i = 0; i < n; i++) {
             calculateConstant(i);
         }
-        // log constants in one string
-        console.log("LOGGING CONSTANTS"); 
-        let log = "";
-        for (let i = 0; i < n; i++) {
-            log += "c[" + i + "][0] = " + c[i][0] + ", c[" + i + "][1] = " + c[i][1] + "\n";
-        }
-        console.log(log);
 
+        // ------------------ IMAGE ------------------
+        img = createImage(screenWidthX, screenHeightY);
+        img.loadPixels();
+        let pg = createGraphics(screenWidthX, screenHeightY);
+        pg.background(0);
+        pg.strokeWeight(3);
+        for (let i = 0; i < path.length - 1; i++) {
+            pg.stroke(200, 200, 200, 255);
+            pg.fill(255, 255, 255, 255);
+            pg.line(midScreen.X + path[i][0], midScreen.Y - path[i][1], midScreen.X + path[i + 1][0], midScreen.Y - path[i + 1][1]);
+        }
+        // set pg to img
+        img = pg;
+        img.updatePixels();
+
+        // ------------------ CIRCLE INITILAIZATION ------------------
         cList = new Array(n);
         for (let i = 0; i < n; i++) {
-            cList[i] = new circ(midScreen, midScreen, c[i][0], c[i][1], i - (n / 2));
+            cList[i] = new circ(midScreen.X, midScreen.X, c[i][0], c[i][1], i - (n / 2));
         }
 
 
@@ -191,24 +198,24 @@ function setup() {
 // Conver tthe above code into p5.js javascript into the new draw() 
 function draw() {
     if (drawPath) {
-        console.log("draw");
         if (mouseIsPressed) {
 
             // User instructions
             fill(255);
             textSize(20);
             strokeWeight(0);
+            stroke(drawColor);
             text("Click to draw, press any key to draw fourier", 10, 30);
 
             strokeWeight(3); 
-            temp = [mouseX - midScreen, midScreen - mouseY];
+            temp = [mouseX - midScreen.X, midScreen.Y - mouseY];
             noFill();
             if (path.length == 0) {
                 path.push(temp);
             } else {
                 path.push(temp);
                 if (path.length > 2) {
-                    line(midScreen + path[path.length - 2][0], midScreen - path[path.length - 2][1], midScreen + path[path.length - 1][0], midScreen - path[path.length - 1][1]);
+                    line(midScreen.X + path[path.length - 2][0], midScreen.Y - path[path.length - 2][1], midScreen.X + path[path.length - 1][0], midScreen.Y - path[path.length - 1][1]);
                 }
             }
         }
@@ -224,32 +231,41 @@ function draw() {
             for (let i = 1; i < path.length; i++) {
                 log += path[i][0] + " + " + path[i][1] + "i, ";
             }
-            console.log(log);
+
+
             setup();
         }
     } else {
         background(0);
+        image(img, 0, 0);
+
         fill(255);
-        textSize(32);
-        text("Circles: " + str(n), 10, 30);
+        textSize(10);
+        stroke(255);
+        strokeWeight(0);
+        text("Circles: " + str(n), 10, 20);
         // points 
-        text ("Points: " + str(path.length), 10, 60);
+        text ("Points: " + str(path.length), 10, 30);
+        // Frames per second
+        // Color based on fps from 0 to 60
+        fill(255 * (frameRate() / 60), 255 * (1 - (frameRate() / 60)), 0, 255); 
+        text("FPS: " + str(frameRate()), 10, 40);
+
+        // User instructions
+        fill(255);
+        textSize(20);
+        strokeWeight(0);
+        stroke(drawColor);
 
 
-        for (let i = 0; i < path.length - 1; i++) {
-            stroke(100, 100, 100, 255); 
-            strokeWeight(3); 
-            line(midScreen + path[i][0], midScreen - path[i][1], midScreen + path[i + 1][0], midScreen - path[i + 1][1]);
-        }
-        let prevX = midScreen;
-        let prevY = midScreen;
+        let prevX = midScreen.X;
+        let prevY = midScreen.Y;
 
 
         stroke(255, 0, 0, 100);
         for (let i = 0; i < n; i++) {
             cList[i].x = prevX;
             cList[i].y = prevY;
-            tint(255, 255, 255, 150);
             stroke(70);
             noFill();
             circle(prevX, prevY, cList[i].radius * 2);
@@ -270,17 +286,22 @@ function draw() {
         for (let i = 0; i < tracer.length - 1; i++) {
             let temp = tracer[i];
             let temp2 = tracer[i + 1];
+            
+            // Make color based on globaltime
+            let redval = 255 * (sin(globalTime) + 1) / 2;
+            let greenval = 255 * (sin(globalTime + PI / 2) + 1) / 2;
+            let blueval = 255 * (sin(globalTime + PI) + 1) / 2;
+            
+            stroke(redval, greenval, blueval, 255); 
             line(temp[0][0], temp[0][1], temp2[0][0], temp2[0][1]);
         }
 
         if (globalTime > 2 * PI) {
             globalTime = 0;
         }
+        globalTime += 0.02;
 
         if (keyIsPressed) {
-            if (key == ' ') {
-                globalTime += 0.02;
-            }
             //  Rest
             if (key == 'r') {
                 globalTime = 0;
