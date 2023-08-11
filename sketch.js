@@ -198,6 +198,16 @@ function setup() {
 // Conver tthe above code into p5.js javascript into the new draw() 
 function draw() {
     if (drawPath) {
+        // Draw button to draw fourier
+        fill(255); 
+        rect(0, screenHeightY - 50, 100, 50);
+        fill(255, 0, 0);
+        strokeWeight(0);
+        stroke(0);
+        textSize(10);
+        // fourier button
+        text("Draw Fourier", 10, screenHeightY - 20);
+
         if (mouseIsPressed) {
 
             // User instructions
@@ -219,7 +229,10 @@ function draw() {
                 }
             }
         }
-        if (keyIsPressed) {
+        // Check if mouse is prsesed in bottom left corner to draw fourier
+        if (keyIsPressed || (mouseIsPressed && mouseX < 100 && mouseY > screenHeightY - 100) && path.length > 1) {
+            // REmove last path point
+            path.pop();
             drawPath = false;
             // Delay for 500ms
             let delay = millis() + 500;
