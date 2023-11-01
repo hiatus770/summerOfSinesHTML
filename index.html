@@ -2,34 +2,39 @@
 <html lang="en">
 
 <head>
- 
+  <title>Fourier Drawing</title>
   <script src="C:/Users/Administrator/Documents/summerOfSinesHTML/p5.min.js"></script>
   <link rel="stylesheet" type="text/css" href="style.css">
   <meta charset="utf-8" />
-
 </head>
 
 <body>
-  <header>
-    <h1 style="color: #ff7a59">Fourier Drawing program</h1>
-    <h2>By: <a  href="https://github.com/hiatus770">hiatus770</a></h2>
-    <h2>Based on <a href="https://www.youtube.com/watch?v=r6sGWTCMz2k">link</a></h2>
-  </header>
-  <main>
-    <center>
-      <h3>Click on the canvas to start drawing</h3>
-      <h3>Hit any key to start animation when done drawing</h3>
-      <h3>Hit i to increase the amount of circles</h3>
-    </center>
-
-    <div id="sketch-holder">
-      <script src="sketch.js"></script>
-    </div>
 
 
+  <!-- make text above the sketch and centered-->
+  <div class="textarea" id="textHolder">
+    <h1>Fourier Drawing</h1>
+    <p>Draw a shape and see it drawn with circles!</p>
+  </div>
+
+  <button id="fourierButton" class="unselectable" onclick="fourier()">Fourier</button>
+
+  <div class="canvas" id="sketchHolder">
+    <script src="sketch.js"></script>
+  </div>
+
+  <div class="canvas" id="canvas-holder">
+    
+  </div>
+
+  <!-- instructions -->
+  <div class="textarea" id="instructions">
+    <h2>Instructions</h2>
+    <p>Draw a shape by clicking on the canvas, when the shape is drawn press button or hit any key<br>To draw the fourier series, hit a key or press the fourier button<br>To increase the amount of circles hit I</p>
+  </div>
 
 
-  </main>
+
 </body>
 
 </html>

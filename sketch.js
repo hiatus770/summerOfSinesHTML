@@ -1,16 +1,17 @@
 let n = 20;
 let globalTime = 0.0;
 let drawPath = true;
-
+let timeStep = 0.01;
 // Get width and height from html
-let screenWidthX = window.innerWidth/2;
-let screenHeightY = window.innerHeight/2;
+let screenWidthX = window.innerWidth / 1.5;
+let screenHeightY = window.innerHeight / 1.5;
 let midScreenX = screenWidthX / 2;
 let midScreenY = screenHeightY / 2;
 let midScreen = { X: midScreenX, Y: midScreenY };
 // List of values 
 let drawColor = [255, 255, 255, 255];
-
+let mouseInCanvas = true;
+let canvas; 
 
 // Create global empty array for path
 let path = [];
@@ -88,7 +89,7 @@ class circ {
 }
 
 function calculateConstant(index) {
-    let dt = (2 * PI) / (path.length-1);
+    let dt = (2 * PI) / (path.length - 1);
     let index2 = index - (n / 2);
     let realSum = 0.0;
     let imaginarySum = 0.0;
@@ -109,12 +110,29 @@ function calculateConstant(index) {
     c[index][1] = imaginarySum;
 }
 
+function addMidPoints(path){
+    temp = [];
+    for (let i = 0; i < path.length - 1; i++) {
+        let x1 = path[i][0];
+        let y1 = path[i][1];
+        let x2 = path[i + 1][0];
+        let y2 = path[i + 1][1];
+        let midX = (x1 + x2) / 2;
+        let midY = (y1 + y2) / 2;
+        temp.push([x1, y1]);
+        temp.push([midX, midY]);
+    }
+    temp.push([path[path.length - 1][0], path[path.length - 1][1]]);
+    return temp; 
+}
+
 function regularInterval() {
     // The amount of poitns should be a minimum of the amount of circles
     // This function will fix points to regular intervals and by certain step size to make sure there are enough points
-    // First start by adding a lot of midpoitns between each point
+    // First start by adding a lot of midpoitns between each poin 
+    
     let temp = [];
-    if (path.length < n * 5){
+    if (path.length < n * 5) {
         for (let i = 0; i < path.length - 1; i++) {
             let x1 = path[i][0];
             let y1 = path[i][1];
@@ -130,8 +148,9 @@ function regularInterval() {
         temp = path;
     }
 
+
     // Now make the distance between each point a certain step size
-    let stepSize = 1 * (n**(1/3))/20;
+    let stepSize = 1 * (n ** (1 / 3)) / 20;
     let temp2 = [];
     let curDist = 0;
     for (let i = 0; i < temp.length - 1; i++) {
@@ -139,14 +158,46 @@ function regularInterval() {
         if (curDist >= stepSize) {
             temp2.push([temp[i][0], temp[i][1]]);
             curDist = 0;
-        } 
+        }
+        
     }
-    temp2.push([temp[temp.length - 1][0], temp[temp.length - 1][1]]);
+   
+    // Now add midpoints again to make sure there are enough points
+    while (temp2.length < n) {
+        temp2 = addMidPoints(temp2);
+    } 
+
     path = temp2;
+
 }
 
 function setup() {
-    createCanvas(screenWidthX, screenHeightY);
+    // REmove last canvas as welll
+
+ 
+    canvas = createCanvas(screenWidthX, screenHeightY);
+    canvas.parent("canvas-holder");
+
+    button.style.display = "block";
+    button.style.left = "50%";
+    button.style.top = "50%";
+    // Text 
+    button.innerHTML = "Draw Fourier";
+
+
+    // add functionality
+    button.onclick = function () {
+        drawPath = false;
+        // add a delay
+        let timer = millis();
+        while (millis() - timer < 1000) {
+            // do nothing
+        }
+        // remove last path point
+        path.pop();
+        setup();
+    }
+
     if (!drawPath) {
         console.log("Drawing path");
         stroke(255);
@@ -194,30 +245,19 @@ function setup() {
 
 
 }
-
+let vel; 
+let button = document.getElementById("fourierButton");
 // Conver tthe above code into p5.js javascript into the new draw() 
 function draw() {
+    // ------------------ Variable updator from html ------------------
+
+
     if (drawPath) {
         // Draw button to draw fourier
-        fill(255); 
-        rect(0, screenHeightY - 50, 100, 50);
-        fill(255, 0, 0);
-        strokeWeight(0);
-        stroke(0);
-        textSize(10);
-        // fourier button
-        text("Draw Fourier", 10, screenHeightY - 20);
+        // fOURIER BUTTON
 
-        if (mouseIsPressed) {
-
-            // User instructions
-            fill(255);
-            textSize(20);
-            strokeWeight(0);
-            stroke(drawColor);
-            text("Click to draw, press any key to draw fourier", 10, 30);
-
-            strokeWeight(3); 
+        if (mouseIsPressed && (mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height)) {
+            strokeWeight(3);
             temp = [mouseX - midScreen.X, midScreen.Y - mouseY];
             noFill();
             if (path.length == 0) {
@@ -230,9 +270,8 @@ function draw() {
             }
         }
         // Check if mouse is prsesed in bottom left corner to draw fourier
-        if (keyIsPressed || (mouseIsPressed && mouseX < 100 && mouseY > screenHeightY - 100) && path.length > 1) {
+        if (keyIsPressed) {
             // REmove last path point
-            path.pop();
             drawPath = false;
             // Delay for 500ms
             let delay = millis() + 500;
@@ -258,11 +297,19 @@ function draw() {
         strokeWeight(0);
         text("Circles: " + str(n), 10, 20);
         // points 
-        text ("Points: " + str(path.length), 10, 30);
+        text("Points: " + str(path.length), 10, 30);
         // Frames per second
         // Color based on fps from 0 to 60
-        fill(255 * (frameRate() / 60), 255 * (1 - (frameRate() / 60)), 0, 255); 
+        fill(255 * (frameRate() / 60), 255 * (1 - (frameRate() / 60)), 0, 255);
         text("FPS: " + str(frameRate()), 10, 40);
+
+        // Velocity, calculated by the distance between the last two points of the tracer
+        fill(255);
+        if (frameCount % 5 == 0) {
+            vel = dist(path[path.length - 1][0], path[path.length - 1][1], path[path.length - 2][0], path[path.length - 2][1]) / (1 / frameRate());
+        }       
+        text("Velocity: " + str(vel), 10, 50); 
+
 
         // User instructions
         fill(255);
@@ -276,6 +323,9 @@ function draw() {
 
 
         stroke(255, 0, 0, 100);
+        // print circle list
+        cList = cList.sort((a, b) => b.radius - a.radius);
+
         for (let i = 0; i < n; i++) {
             cList[i].x = prevX;
             cList[i].y = prevY;
@@ -299,20 +349,20 @@ function draw() {
         for (let i = 0; i < tracer.length - 1; i++) {
             let temp = tracer[i];
             let temp2 = tracer[i + 1];
-            
+
             // Make color based on globaltime
             let redval = 255 * (sin(globalTime) + 1) / 2;
             let greenval = 255 * (sin(globalTime + PI / 2) + 1) / 2;
             let blueval = 255 * (sin(globalTime + PI) + 1) / 2;
-            
-            stroke(redval, greenval, blueval, 255); 
+
+            stroke(redval, greenval, blueval, 255);
             line(temp[0][0], temp[0][1], temp2[0][0], temp2[0][1]);
         }
 
         if (globalTime > 2 * PI) {
             globalTime = 0;
         }
-        globalTime += 0.02;
+        globalTime += timeStep;
 
         if (keyIsPressed) {
             //  Rest
@@ -330,15 +380,67 @@ function draw() {
                 setup();
 
             }
+            if (key == "s"){
+                // Save constants in the following format radius [value, value, value ... value] and phase [value, value, value ... value] and the initial point
+                let log = "r_{c}=[";
+                for (let i = 0; i < n; i++) {
+                    log += cList[i].radius + ", ";
+                }
+                // remove last commaii
+                log = log.substring(0, log.length - 2);
+                log += "]\nv_{c}=[";
+                for (let i = 0; i < n; i++) {
+                    log += cList[i].v + ", ";
+                }
+                // remove last comma 
+                log = log.substring(0, log.length - 2);
+
+               
+                log += "]\na_{c}=["; 
+                for (let i = 0; i < n; i++) {
+                    log += cList[i].offset + PI + ", ";
+                }
+                log = log.substring(0, log.length - 2);
+                log += "]"; 
+
+               
+                console.log(log);
+                
+                // copy to clipboard
+                navigator.clipboard.writeText(log);
+                // add a delay
+                let delay = millis() + 500;
+                while (millis() < delay) {
+                    // do nothing
+                }
+
+
+            }
         }
-        // if mouse is pressed reset the drawing 
+        // if mouse is pressed reset the drawingo also make sure it is inside the window 
         if (mouseIsPressed) {
-            // redraw path
-            background(0);
-            path = [];
-            tracer = [];
-            drawPath = true;
-            setup();
+            if (mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
+                // redraw path
+                background(0);
+                path = [];
+                tracer = [];
+                drawPath = true;
+                setup();
+            }
         }
     }
+}
+
+function bubbleSort(arr) {
+  let len = arr.length;
+  for (let i = 0; i < len; i++) {
+    for (let j = 0; j < len - 1; j++) {
+      if (parseFloat(arr[j].radius) < parseFloat(arr[j + 1].radius)) {
+        let tmp = arr[j];
+        arr[j] = arr[j + 1];
+        arr[j + 1] = tmp;
+      }
+    }
+  }
+  return arr;
 }
