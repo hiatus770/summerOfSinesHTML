@@ -283,6 +283,8 @@ function draw() {
             for (let i = 1; i < path.length; i++) {
                 log += path[i][0] + " + " + path[i][1] + "i, ";
             }
+            
+
 
 
             setup();
@@ -345,6 +347,7 @@ function draw() {
                 tracer.shift();
             }
         }
+        
         // Draw the path
         for (let i = 0; i < tracer.length - 1; i++) {
             let temp = tracer[i];
